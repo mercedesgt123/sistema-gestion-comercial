@@ -1,23 +1,17 @@
 import os
-import pprint
-from archivos import productos 
-import main
- 
-RUTA_ARCHIVO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "archivos.py")
-def guardar_productos(lista):
-    """Reescribe archivo.py con la lista de productos."""
-    with open(RUTA_ARCHIVO, "w", encoding="utf-8") as f:
-        f.write("productos = " + pprint.pformat(lista, sort_dicts=False))
+from archivos import guardarProductos, cargarProductos
+from estructuras import crearProducto
+import sys
 
+productos =  cargarProductos()
 def gestionProductos():
     while True:
         os.system("cls" if os.name == "nt" else "clear")
         try:
             opcion = int(input(""" 
-==================================================
-            MÓDULO GESTION DE PRODUCTOS
-==================================================
-
+====================================================================================================================
+                                                    MÓDULO GESTION DE PRODUCTOS
+====================================================================================================================
 Elija una opción:
 1. Registrar Producto
 2. Consultar Producto por Código
@@ -42,12 +36,14 @@ Escriba una Opción: """))
                 case 5:
                     desactivarProducto()
                 case 6:
-                    main.menuPrincipal()
+                    return
+                    #import main
+                    #main.menuPrincipal()
                 case 7:
                     print("""
-==================================================
-                    SALIR
-==================================================""")
+====================================================================================================================
+                                                                 SALIR
+====================================================================================================================""")
                     while True:
                         cerrar = input(
                         "¿Desea continuar?\n"
@@ -59,7 +55,7 @@ Escriba una Opción: """))
                             break
                         elif cerrar == "S":
                             print("Saliendo...")
-                            return 
+                            sys.exit()
                         else:
                             print("Error: Debe ingresar únicamente S o N.")
                 case _:
@@ -68,285 +64,503 @@ Escriba una Opción: """))
         except ValueError:
             print("Error: Debe ingresar únicamente números.")
             input("Presione Enter para continuar...")
-                
+
 def registroProducto():
     print("""
-==================================================
-                REGISTRAR PRODUCTO
-==================================================""")
+====================================================================================================================
+                                                    REGISTRAR PRODUCTO
+====================================================================================================================""")
+    print("Presione 0 si desea salir")
+    opcion = input("Ingrese opción: ").strip().upper()
+    if opcion == "0":
+        print("""
+====================================================================================================================
+                                                    OPERACIÓN CANCELADA
+====================================================================================================================""")
+        input("\nPresione Enter para continuar...")
+        return
 
+    print("""
+====================================================================================================================
+                                                    INGRESO DE DATOS 
+====================================================================================================================""")
     if len(productos) == 0:
         codigo = 1
     else:
         codigo = productos[-1]["codigo"] + 1
     print("Código Producto: ", codigo)
 
+    producto = []  
     while True:
-        nombre = input("Ingrese el nombre del Producto: ").strip().capitalize()
-        if nombre != "":
+        nombre = ingresarTexto("Ingrese nombre del producto: ")
+
+        productoDuplicado = False
+        for val in productos:
+            if val['nombre'].lower() == nombre.lower():
+                productoDuplicado = val
+                break  
+
+        if productoDuplicado:
+            print("\033[31mProducto Duplicado.\033[0m")
+            intento = validarOpcion("¿Desea intentar con otro nombre? (Si/No): ")
+            if not intento:
+                if len(producto) == 0:
+                    print("""
+====================================================================================================================
+OPERACIÓN CANCELADA: PRODUCTO NO GUARDADO
+====================================================================================================================""")
+                    input("\nPresione Enter para continuar...")
+                    return
+                else:
+                    break  
+            continue 
+
+        categoria = ingresarTexto("Ingrese categoría del producto: ")
+          
+        while True:  
+            cantidad = validarTexto("Ingrese cantidad: ")
+            if cantidad <= 0:
+                print("Error: La cantidad debe ser mayor que cero.")
+                continue          
             break
-        print("Error: Debe ingresar el nombre del producto.")
 
-    while True:
-        categoria = input("Ingrese la categoría del Producto: ").strip()
-        if categoria != "":
+        while True:  
+            stock = validarTexto("Ingrese stock mínimo: ")
+            if stock <= 0:
+                print("Error: El stock debe ser mayor que cero.")
+                continue          
             break
-        print("Error: Debe ingresar la categoría del producto.")
 
-    while True:
-        try:
-            precio = float(input("Ingrese el precio: "))
-            if precio > 0:
-                break
-            print("Error: El precio no puede ser negativo")
-        except ValueError:
-            print("Debe ingresar un valor válido.")
+        while True:
+            entrada = input("Ingrese precio: ").strip()
+            if not entrada:
+                print("Error: Precio no puede estar vacío.")
+                continue
 
-    while True:
-        try:
-            cantidad = int(input("Ingrese la cantidad disponible: "))
-            if cantidad > 0:
-                break
-            print("Error: La cantidad disponible no puede ser negativa")
-        except ValueError:
-            print("Debe ingresar un valor válido.")
+            try:
+                precio = float(entrada)
+            except ValueError:
+                print("Error: Debe ingresar un valor válido.")
+                continue
 
-    while True:
-        try:
-            stock = int(input("Ingrese el stock mínimo: "))
-            if stock > 0:
-                break
-            print("Error: La cantidad de stock no puede ser negativa.")
-        except ValueError:
-            print("Debe ingresar un valor válido.")
-    
-    while True:
-        estado = input("Ingrese el estado del producto (Activo/Inactivo): ").strip().capitalize()
-        if estado in ["Activo", "Inactivo"]:
+            if precio <= 0:
+                print("Error: El precio debe ser mayor que cero.")
+                continue
             break
-        print("Error: Debe ingresar 'Activo' o 'Inactivo'.")
         
+        while True:
+            estado = input("Ingrese el estado del producto (Activo/Inactivo): ").strip().capitalize()
+            if estado in ["Activo", "Inactivo"]:
+                break
+            print("Error: Debe ingresar 'Activo' o 'Inactivo'.")
 
-    for value in productos:
-        if nombre.lower() == value['nombre'].lower():
-            print("No puede ingresar porductos duplicados.")
-            input("Presione Enter para continuar...")
-            return
+        prod = crearProducto(codigo, nombre, categoria, cantidad, precio, stock, estado)
+        producto.append(prod)
+        
+        agregarProducto = validarOpcion("¿Desea agregar otro producto? (Si/No): ")
+        if not agregarProducto:
+            break
 
-    producto = {
-        "codigo": codigo,
-        "nombre": nombre,
-        "categoria": categoria,
-        "precio": precio,
-        "cantidad": cantidad,
-        "stock": stock,
-        "estado": estado
-    }
+        codigo += 1
+        print("Código Producto: ", codigo)
 
-    productos.append(producto)
-    guardar_productos(productos)
-    print("""
-==================================================")
-            PRODUCTO REGISTRADO CON EXITO
-==================================================""")
-    input("Presione Enter para continuar...")
+    guardar = validarOpcion("¿Desea guardar los datos? (Si/No): ")
+    if guardar:    
+        print("""
+====================================================================================================================
+                                                RESUMEN DE PRODUCTO
+====================================================================================================================""")
+        print(
+            f"{'Código':<10} "
+            f"{'Nombre':<25} "
+            f"{'Categoría':<25} "
+            f"{'Cantidad':^10} "
+            f"{'Stock Mínimo':<15} "
+            f"{'Precio':>12} "
+            f"{'Estado':<12}"
+        )
+
+        print("-" * 115)
+        
+        for item in producto:
+            print(
+                f"{item['codigo']:<10} "
+                f"{item['nombre']:<25} "
+                f"{item['categoria']:<25} "
+                f"{item['cantidad']:^10} "
+                f"{item['stock']:<15} "
+                f"Q{item['precio']:>12.2f} "  
+                f"{item['estado']:<12}"
+            )
+        
+        for p in producto:
+            productos.append(p)
+        
+        guardarProductos(productos)
+
+        print("""
+====================================================================================================================
+                                            ***DATOS GUARDADOS CON ÉXITO***
+====================================================================================================================""")
+        input("\nPresione Enter para continuar...")
+    else:
+        print("""
+====================================================================================================================
+OPERACION CANCELADA
+====================================================================================================================""")
+        input("\nPresione Enter para continuar...") 
+        return               
 
 def buscarProducto():
     print("""
-==================================================
-                 CONSULTAR PRODUCTO
-==================================================""")
+====================================================================================================================
+                                                        CONSULTAR PRODUCTO
+====================================================================================================================""")
     if productos:
+        print("Presione 0 si desea salir")
+        opcion = input("Ingrese opción: ").strip().upper()
+        if opcion == "0":
+            print("""
+====================================================================================================================
+                                                        OPERACIÓN CANCELADA
+====================================================================================================================""")
+            input("\nPresione Enter para continuar...")
+            return
+        print("""
+====================================================================================================================
+                                                    INGRESE DATO A BUSCAR
+====================================================================================================================""")
+
         while True:
-            try:
-                buscar = int(input("Ingrese código del producto:  "))
+            codigo = validarTexto("Ingrese código del producto: ")
 
-                encontrado = 0
-                for val in productos:
-                    if val['codigo'] == buscar:
-                        encontrado += 1
-                        print("""
-==================================================
-            INFORMACION DEL PRODUCTO
-==================================================""")
-                        print("Código             : ", val['codigo'])
-                        print("Nombre             : ", val['nombre'])
-                        print("Categoría          : ", val['categoria'])
-                        print("Precio             :  Q.", val['precio'])
-                        print("Cantidad Disponible: ", val['cantidad'])
-                        print("Stock Mínimo       : ", val['stock'])
-                        print("Estado             : ", val['estado'])
-                        print("==================================================")
-                        input("Presione Enter para continuar...")
-                        return
+            productoEncontrado = False
+            for val in productos:
+                if val['codigo'] == codigo:
+                    productoEncontrado = val
+                    break  
 
-                if encontrado == 0:
-                    print("""
-==================================================
-            INFORMACION DEL PRODUCTO
-==================================================""")
-                    print("Producto no encontrado.")
-                    print("==================================================")
-                    input("Presione Enter para continuar...")
-                    return
-                
-            except ValueError:
-                print("Debe ingresar un valor válido.")
+            print("""
+====================================================================================================================
+                                            INFORMACION DE PRODUCTO
+====================================================================================================================""")
+            print(
+                    f"{'Código':<10} "
+                    f"{'Nombre':<25} "
+                    f"{'Categoría':<25} "
+                    f"{'Cantidad':^10} "
+                    f"{'Stock Mínimo':<15} "
+                    f"{'Precio':>12} "
+                    f"{'Estado':>12}"
+                )
+            print("-" * 115)
+
+            if productoEncontrado:
+                print(
+                    f"{productoEncontrado['codigo']:<10} "
+                    f"{productoEncontrado['nombre']:<25} "
+                    f"{productoEncontrado['categoria']:<25} "
+                    f"{productoEncontrado['cantidad']:^10} "
+                    f"{productoEncontrado['stock']:^15} "
+                    f"{productoEncontrado['precio']:>12} "
+                    f"{productoEncontrado['estado']:>12}"
+                )
+                print("-" * 115)
+            else: 
+                print("Producto no encontrado")
+                print("-" * 115)
+
+            buscaOtro = validarOpcion("¿Desea buscar otro producto? (Si/No): ")
+            if not buscaOtro:
+                break  
+    else:
+        print("No hay Productos Registrados.")
+        print("====================================================================================================================")
+        input("Presione Enter para continuar...")
+        return
+
 
 def listaProductos():
     print("""
-==========================================================================================
-                                    LISTADO DE PRODUCTOS 
-==========================================================================================""")
+====================================================================================================================
+                                                    LISTADO DE PRODUCTOS 
+====================================================================================================================""")
     if productos:
-        print(f"\n\n{'Código':<8} {'Nombre':<20} {'Categoría':<15} {'Precio':<10} {'Cantidad':<10} {'Stock':<8} {'Estado':<10}")
-        print("-" * 90)
-
+        print(
+            f"{'Código':<10} "
+            f"{'Nombre':<25} "
+            f"{'Categoría':<25} "
+            f"{'Cantidad':^10} "
+            f"{'Stock Mínimo':<15} "
+            f"{'Precio':>12} "
+            f"{'Estado':>12}"
+            )
+        print("-" * 115)
+            
         for val in productos:
             print(
-                f"{val['codigo']:<8} "
-                f"{val['nombre']:<20} "
-                f"{val['categoria']:<15} "
-                f"Q{val['precio']:<9.2f} "
+                f"{val['codigo']:<10} "
+                f"{val['nombre']:<25} "
+                f"{val['categoria']:<25} "
                 f"{val['cantidad']:^10} "
-                f"{val['stock']:^8} "
-                f"{val['estado']:<10}"
+                f"{val['stock']:^15} "
+                f"{val['precio']:>12} "
+                f"{val['estado']:>12}"
             )
-        print("-" * 90)
-        input("\n\nPresione Enter para continuar...")
 
+        print("-" * 115)
+        input("\n\nPresione Enter para continuar...")
     else:
-        print("No hay productos registrados.")
-    
+        print("No hay Productos Registrados.")
+        print("==========================================================================================")
+        input("Presione Enter para continuar...")
+        return
 
 def modificarProducto():
     print("""
-==================================================
-            MODIFICACION DE PRODUCTO 
-==================================================""")
-    if productos: 
-        while True:
-            try:
-                buscar = int(input("Ingrese código del producto:  "))
-                break
-            except ValueError:
-                print("Debe ingresar un valor válido.")   
-                
-        encontrado = 0    
-        for val in productos:
-            if val['codigo'] == buscar:
-                encontrado += 1
-                os.system("cls" if os.name == "nt" else "clear")
-                print("""
-==================================================
-            INGRESO LOS NUEVOS DATOS 
-==================================================""")
-                while True:
-                    try:
-                        precio = float(input("\nIngrese el precio: "))
-                        if precio > 0:
-                            break
-                        print("Error: El precio no puede ser negativo")
-                    except ValueError:
-                        print("Debe ingresar un valor válido.")
-
-                while True:
-                    try:
-                        cantidad = int(input("Ingrese la cantidad disponible: "))
-                        if cantidad > 0:
-                            break
-                        print("Error: La cantidad disponible no puede ser negativa")
-                    except ValueError:
-                        print("Debe ingresar un valor válido.")
-
-                while True:
-                    try:
-                        stock = int(input("Ingrese el stock mínimo: "))
-                        if stock > 0:
-                            break
-                        print("Error: La cantidad de stock no puede ser negativa.")
-                    except ValueError:
-                        print("Debe ingresar un valor válido.")    
-    
-                val['precio'] = precio
-                val['cantidad'] = cantidad
-                val['stock'] = stock
-                guardar_productos(productos)
-        
-                print("""
-==================================================
-            DATOS ACTUALIZADOS CON EXITO
-==================================================""")
-                input("\nPresione Enter para continuar...")
-                return
-
-        if encontrado == 0:
+====================================================================================================================
+                                        MODIFICACION DE PRODUCTO 
+====================================================================================================================""")
+    if productos:
+        print("Presione 0 si desea salir")
+        opcion = input("Ingrese opción: ").strip().upper()
+        if opcion == "0":
             print("""
-==================================================
-            PRODUCTO NO ENCOTRADO
-==================================================""")
-            input("Presione Enter para continuar...")
+====================================================================================================================
+                                            OPERACIÓN CANCELADA
+====================================================================================================================""")
+            input("\nPresione Enter para continuar...")
             return
-    else: 
+
+        print("""
+====================================================================================================================
+                                            INGRESO DE DATOS 
+====================================================================================================================""")
+
+        while True:
+            codigo = validarTexto("Ingrese código del producto: ")
+
+            productoEncontrado = False
+            for val in productos:
+                if val['codigo'] == codigo:
+                    productoEncontrado = val
+                    break  
+
+            if not productoEncontrado:
+                print("\033[31mProducto no encontrado.\033[0m")
+                intento = validarOpcion("¿Desea intentar con otro producto? (Si/No): ")
+                if not intento:
+                    print("""
+====================================================================================================================
+OPERACIÓN CANCELADA
+====================================================================================================================""")
+                    input("\nPresione Enter para continuar...")
+                    return  
+                continue 
+
+            categoria = ingresarTexto("Ingrese categoría del producto: ")
+              
+            while True:  
+                stock = validarTexto("Ingrese stock mínimo: ")
+                if stock > 0:
+                    break
+                print("Error: El stock debe ser mayor que cero.")
+              
+            while True:
+                entrada = input("Ingrese precio: ").strip()
+                if not entrada:
+                    print("Error: Precio no puede estar vacío.")
+                    continue
+                try:
+                    precio = float(entrada)
+                    if precio > 0:
+                        break
+                    print("Error: El precio debe ser mayor que cero.")
+                except ValueError:
+                    print("Error: Debe ingresar un valor válido.")
+
+            guardar = validarOpcion("¿Desea guardar los cambios de este producto? (Si/No): ")
+            if guardar:  
+                productoEncontrado['categoria'] = categoria
+                productoEncontrado['stock'] = stock
+                productoEncontrado['precio'] = precio
+                
+                print("""
+====================================================================================================================
+                                   SE ACTUALIZARON LOS DATOS
+====================================================================================================================""")
+                print(
+                    f"{'Código':<10} "
+                    f"{'Categoría':<75} "
+                    f"{'Stock Mínimo':<15} "
+                    f"{'Precio':>12}"  
+                )
+                print("-" * 115)
+                print(
+                    f"{productoEncontrado['codigo']:<10} "
+                    f"{productoEncontrado['categoria']:<75} "
+                    f"{productoEncontrado['stock']:^15} "
+                    f"{productoEncontrado['precio']:>12.2f}"  
+                )
+                print("-" * 115)
+
+                guardarProductos(productos)
+                print("Cambios guardados exitosamente.")
+            else: 
+                print("""
+====================================================================================================================
+OPERACIÓN CANCELADA: LOS CAMBIOS NO SE GUARDARON
+====================================================================================================================""")
+
+            otro = validarOpcion("¿Desea modificar otro producto? (Si/No): ")
+            if not otro:
+                break 
+
+        input("\nPresione Enter para continuar...")
+        return  
+    else:              
         print("No hay Productos Registrados.")
-                    
+        print("==========================================================================================")
+        input("Presione Enter para continuar...")
+        return
+
+        
 def desactivarProducto():
     print("""
-==================================================
-                DESACTIVAR PRODUCTO 
-==================================================""")
-    if productos: 
-        while True:
-            try:
-                codigo = int(input("Ingrese código del producto:  "))
-                break
-            except ValueError:
-                print("Debe ingresar un valor válido.")  
-
-        encontrado = 0
-        for val in productos:
-            if codigo == val['codigo']:
-                if val['estado'] == "Inactivo":
-                    print("""
-==================================================                
-El producto se encuentra inactivo.
-==================================================""")                 
-                    input("Presione Enter para continuar...")
-                    return
-                encontrado += 1
-
-                while True:
-                    opcion = input("¿Desea desactivar el producto? (Si/No): ").strip().capitalize()
-
-                    if opcion == "No":
-                        print("""
-==================================================                
-                Operación cancelada
-==================================================""")
-                        input("Presione Enter para continuar...")
-                        return                    
-                    
-                    if opcion == "Si":
-                        break
-                
-                    print("Error: Debe ingresar 'Si' o 'No'.")
-
-                val['estado'] = 'Inactivo'
-                guardar_productos(productos)
-                print("""
-==================================================                
-El producto fue desactivado correctamente.
-==================================================""")
-                input("Presione Enter para continuar...")
-                return
-
-        if encontrado == 0:
+====================================================================================================================
+                                             DESACTIVAR DE PRODUCTO 
+====================================================================================================================""")
+    if productos:
+        print("Presione 0 si desea salir")
+        opcion = input("Ingrese opción: ").strip().upper()
+        if opcion == "0":
             print("""
-==================================================                
-Producto no encontrado.
-==================================================""")
-            input("Presione Enter para continuar...")
+====================================================================================================================
+                                                OPERACIÓN CANCELADA
+====================================================================================================================""")
+            input("\nPresione Enter para continuar...")
             return
+
+        print("""
+====================================================================================================================
+                                            INGRESO DE DATOS 
+====================================================================================================================""")
+
+        while True:
+            codigo = validarTexto("Ingrese código del producto: ")
+
+            productoEncontrado = False
+            for val in productos:
+                if val['codigo'] == codigo:
+                    productoEncontrado = val
+                    break  
+
+            if not productoEncontrado:
+                print("\033[31mProducto no encontrado.\033[0m")
+                intento = validarOpcion("¿Desea intentar con otro producto? (Si/No): ")
+                if not intento:
+                    print("""
+====================================================================================================================
+OPERACIÓN CANCELADA
+====================================================================================================================""")
+                    input("\nPresione Enter para continuar...")
+                    return  
+                continue 
+
+            if productoEncontrado['estado'] == "Inactivo":
+                print("\033[31mEl producto ya se encuentra inactivo\033[0m")
+                intento = validarOpcion("¿Desea intentar con otro producto? (Si/No): ")
+                if not intento:
+                    print("""
+====================================================================================================================
+OPERACIÓN CANCELADA
+====================================================================================================================""")
+                    input("\nPresione Enter para continuar...")
+                    return  
+                continue 
+
+
+            while True:
+                estado = input("Ingrese el estado del producto (Inactivo): ").strip().capitalize()
+                if estado == "Inactivo":
+                    break
+                print("Error: Debe ingresar 'Inactivo'.")
+
+
+              
+           
+
+            guardar = validarOpcion("¿Desea guardar los cambios de este producto? (Si/No): ")
+            if guardar:  
+                productoEncontrado['estado'] = estado
+                
+                print("""
+====================================================================================================================
+                                   SE ACTUALIZARON LOS DATOS
+====================================================================================================================""")
+                print(
+                    f"{'Código':<10} "
+                    f"{'':<75} "
+                    f"{'':<15} "
+                    f"{'Estado':>12}"  
+                )
+                print("-" * 115)
+                print(
+                    f"{productoEncontrado['codigo']:<10} "
+                    f"{'':<75} "
+                    f"{'':^15} "
+                    f"{productoEncontrado['estado']:>12}"  
+                )
+                print("-" * 115)
+
+                guardarProductos(productos)
+                print("Cambios guardados exitosamente.")
+            else: 
+                print("""
+====================================================================================================================
+OPERACIÓN CANCELADA: LOS CAMBIOS NO SE GUARDARON
+====================================================================================================================""")
+
+            otro = validarOpcion("¿Desea modificar otro producto? (Si/No): ")
+            if not otro:
+                break 
+
+        input("\nPresione Enter para continuar...")
+        return  
+    else:              
+        print("No hay Productos Registrados.")
+        print("==========================================================================================")
+        input("Presione Enter para continuar...")
+        return
+
+
+
+def validarTexto(datos):
+    while True:
+        entrada = input(datos).strip()  
+   
+        if entrada == "":
+            print("Error: El campo no puede estar vacío.")
+            continue
         
-    else:
-        print("No hay productos registrados.")
+        if not entrada.isdigit():
+            print("Error: Debe ingresar únicamente números.")
+            continue
+        
+        valor = int(entrada)
+        return valor
+       
+
+def validarOpcion(mensaje):
+    while True:
+        valor = input(mensaje).strip().capitalize()
+        if valor in ("Si", "No"):
+            return valor == "Si"
+        print("Error: Escriba 'Si' o 'No'.")
+
+def ingresarTexto(mensaje):
+    while True:
+        valor = input(mensaje).strip().capitalize()
+        if valor != "":
+            return valor
+        print("Error: Debe ingresar un valor. No puede quedar vacío.")
