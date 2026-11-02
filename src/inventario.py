@@ -262,14 +262,15 @@ OPERACIÓN CANCELADA: EL DOCUMENTO NO SE GUARDÓ
                     f"{item['precio']:>12.2f} "
                 )
 
-                #ACTUALIZACION Y GUARDA EL DOCUMENTO
+                # ACTUALIZACION Y GUARDA EL DOCUMENTO
             for item in detalle:
+
+                actualizado = False
                 for prod in productos:
-                    if prod['codigo'] == item['codigo']:
+                    if prod['codigo'] == item['codigo'] and not actualizado:
                         prod['cantidad'] += item['cantidad']
                         prod['precio'] = item['precio']
 
-                              
                         tipoMovimiento = "Entrada"
                         descripcion = f"Ingreso de producto por documento No. {correlativo}"
                         movimiento = crearMovimiento(
@@ -280,6 +281,7 @@ OPERACIÓN CANCELADA: EL DOCUMENTO NO SE GUARDÓ
                             item['cantidad']
                         )
                         movimientos.append(movimiento)
+                        actualizado = True
                         break
 
             guardarMovimientos(movimientos)

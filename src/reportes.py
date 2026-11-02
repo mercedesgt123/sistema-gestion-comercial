@@ -150,6 +150,34 @@ def reporteExistenciaStock():
         input("Presione Enter para continuar...")
         return
 
+
+
+def reporteHistorialVenta():
+    print("""
+====================================================================================================================
+                                        REPORTE DE HISTORIAL DE VENTAS                                              
+====================================================================================================================""")
+    if ventas:
+        print(
+            f"{'Documento':<28} "
+            f"{'Fecha':<68} "
+            f"{'Total':>18}"
+        )
+        print("-" * 116)
+
+        for item in ventas:
+            print(
+                f"{item['correlativoVenta']:<28} "
+                f"{item['fecha']:<68} "
+                f"Q.{item['total']:>15.2f}"
+            )
+        print("-" * 116)
+        input("\nPresione Enter para continuar...")
+    else:
+        print("No hay Ventas Registradas en el Historial.")
+        print("====================================================================================================================")
+        input("Presione Enter para continuar...")
+
 def reporteIngresosVentas():
     print("""
 ====================================================================================================================
@@ -298,7 +326,6 @@ def reporteTotalInventario():
         print("====================================================================================================================")
         input("\nPresione Enter para continuar...")
         print("====================================================================================================================")
-        input("\nPresione Enter para continuar...")
     else:
         print("No hay productos registrados en el inventario.")
         print("====================================================================================================================")
