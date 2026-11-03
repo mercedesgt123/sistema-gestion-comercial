@@ -1,12 +1,7 @@
 import os
 import sys
 from datetime import datetime
-from archivos import cargarProductos, cargarMovimientos, cargarEntradas, cargarVentas
-
-productos = cargarProductos()
-entradas = cargarEntradas()
-movimientos = cargarMovimientos()
-ventas =  cargarVentas()
+from archivos import cargarProductos, cargarVentas
 
 def estadisticasReportes(): 
     while True:
@@ -14,7 +9,7 @@ def estadisticasReportes():
         try:
             print(""" 
 ====================================================================================================================
-                                            CONTROL DE INVENTARIO     
+                                            REPORTE Y ESTADISTICAS     
 ====================================================================================================================""")
             opcion = int(input(""" 
 Elija una opción:
@@ -28,7 +23,7 @@ Elija una opción:
 8. Regresar a Menú Principal
 9. Salir
 
-Opción: """))
+Escriba una Opción: """))
 
             os.system("cls" if os.name == "nt" else "clear")
             match opcion:
@@ -77,6 +72,7 @@ Opción: """))
             input("Presione Enter para continuar...")
 
 def reporteProductos():
+    productos = cargarProductos()
     print(""" 
 ====================================================================================================================
                                                     REPORTE DE PRODUCTOS  
@@ -112,6 +108,7 @@ def reporteProductos():
         return
 
 def reporteExistenciaStock():
+    productos = cargarProductos()
     print(""" 
 ====================================================================================================================
                         REPORTE DE PRODUCTOS CON EXISTENCIA IGUAL O INFERIOR AL STOCK MÍNIMO   
@@ -142,6 +139,9 @@ def reporteExistenciaStock():
                     f"{item['stock']:>10} "
                     f"{item['estado']:>15} "
                 )
+        if contador == 0:
+            print("No hay produtos con existencia igual o inferior al stock minìmo.")
+    
         print("-" * 116)
         input("\nPresione Enter para continuar...")
     else: 
@@ -153,6 +153,7 @@ def reporteExistenciaStock():
 
 
 def reporteHistorialVenta():
+    ventas =  cargarVentas()
     print("""
 ====================================================================================================================
                                         REPORTE DE HISTORIAL DE VENTAS                                              
@@ -179,6 +180,7 @@ def reporteHistorialVenta():
         input("Presione Enter para continuar...")
 
 def reporteIngresosVentas():
+    ventas =  cargarVentas()
     print("""
 ====================================================================================================================
                                             REPORTE TOTAL DE INGRESOS POR VENTA
@@ -228,6 +230,7 @@ def reporteIngresosVentas():
         input("Presione Enter para continuar...")
 
 def reporteProductoVenta():
+    ventas =  cargarVentas()
     print("""
 ====================================================================================================================
                                 REPORTE DE PRODUCTO CON MAYOR CANTIDAD DE UNIDADES VENDIDAS
@@ -282,6 +285,7 @@ def reporteProductoVenta():
         input("Presione Enter para continuar...")
 
 def reporteTotalInventario():
+    productos = cargarProductos()
     print("""
 ====================================================================================================================
                                     REPORTE VALOR TOTAL DEL INVENTARIO DISPONIBLE
@@ -299,8 +303,10 @@ def reporteTotalInventario():
         )
         print("-" * 116)
 
+        product = False
         for prod in productos:
             if prod['estado'] == "Activo":
+                product = True
                 cantidad = prod["cantidad"]
                 precioUnitario = prod["precio"]
                 subtotal = cantidad * precioUnitario
@@ -320,7 +326,8 @@ def reporteTotalInventario():
                 f"{'TOTAL GENERAL':<77}"
                 f"{valorTotalGeneral:>39,.2f}"
             )
-        else:
+
+        if not product:
             print("No hay productos activos en el inventario.")
         
         print("====================================================================================================================")
@@ -333,12 +340,32 @@ def reporteTotalInventario():
         return
 
 def reportePromedioVentas():
+    ventas = cargarVentas()
+
     print("""
 ====================================================================================================================
                             REPORTE PROMEDIO DE VENTAS POR PERÍODO — DATOS REGISTRADOS
 ====================================================================================================================""")
 
+    fechaInicio = input("Ingrese fecha inicio (dd/mm/yyyy): ").strip()
+    fechaFin = input("Ingrese fecha fin (dd/mm/yyyy): ").strip()
+    print("=" * 116) 
+
+    try:
+        fechaInicio = datetime.strptime(fechaInicio, "%d/%m/%Y")
+        fechaFin = datetime.strptime(fechaFin, "%d/%m/%Y")
+    except ValueError:
+        print("Error: Formato de fecha inválido.")
+        input("\nPresione Enter para continuar...")
+        return
+
+    if fechaInicio > fechaFin:
+        print("Error: La fecha inicial no puede ser mayor que la fecha final.")
+        input("\nPresione Enter para continuar...")
+        return
+
     if ventas:
+
         totalVentas = 0
         montoTotalGeneral = 0
 
@@ -348,18 +375,28 @@ def reportePromedioVentas():
             f"{'Monto Total Venta (Q)':>38}"
             f"{'Cantidad de Artículos':>30}"
         )
+
         print("-" * 116)
 
         indice = 1
+
         for venta in ventas:
+
+            fechaVenta = datetime.strptime(venta["fecha"], "%d/%m/%Y")
+
+            if fechaVenta < fechaInicio or fechaVenta > fechaFin:
+                continue
+
             totalVentas = totalVentas + 1
+
             montoVenta = venta["total"]
             fecha = venta["fecha"]
-            
+
             cantidadArticulos = 0
+
             for item in venta["detalle"]:
                 cantidadArticulos = cantidadArticulos + item["cantidad"]
-            
+
             montoTotalGeneral = montoTotalGeneral + montoVenta
 
             print(
@@ -368,21 +405,33 @@ def reportePromedioVentas():
                 f"{montoVenta:>38,.2f}"
                 f"{cantidadArticulos:>30}"
             )
+
             indice = indice + 1
+
+        if totalVentas == 0:
+            print("No existen ventas registradas en el período seleccionado.")
+            print("====================================================================================================================")
+            input("\nPresione Enter para continuar...")
+            return
 
         promedioPorVenta = montoTotalGeneral / totalVentas
 
         print("-" * 116)
+
         print(
             f"{'TOTALES':<38}"
             f"{montoTotalGeneral:>38,.2f}"
         )
+
         print(
             f"{'PROMEDIO POR VENTA (Q)':<38}"
             f"{promedioPorVenta:>76,.2f}"
         )
+
         print("====================================================================================================================")
+
         input("\nPresione Enter para continuar...")
+
     else:
         print("No hay ventas registradas para calcular el promedio.")
         print("====================================================================================================================")

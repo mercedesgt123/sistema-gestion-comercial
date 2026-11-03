@@ -66,6 +66,7 @@ Escriba una Opción: """))
             input("Presione Enter para continuar...")
 
 def registroProducto():
+    global productos  
     print("""
 ====================================================================================================================
                                                     REGISTRAR PRODUCTO
@@ -100,6 +101,12 @@ def registroProducto():
                 productoDuplicado = val
                 break  
 
+        if not productoDuplicado:
+            for val in producto:
+                if val['nombre'].lower() == nombre.lower():
+                    productoDuplicado = True
+                    break
+                
         if productoDuplicado:
             print("\033[31mProducto Duplicado.\033[0m")
             intento = validarOpcion("¿Desea intentar con otro nombre? (Si/No): ")
@@ -197,7 +204,7 @@ OPERACIÓN CANCELADA: PRODUCTO NO GUARDADO
             productos.append(p)
         
         guardarProductos(productos)
-
+        productos =  cargarProductos()
         print("""
 ====================================================================================================================
                                             ***DATOS GUARDADOS CON ÉXITO***
