@@ -94,13 +94,11 @@ Se ejecutaron pruebas normales y de situaciones excepcionales, con capturas de p
 ## Trabajo en GitHub
 
 - **Commits:** mensajes descriptivos del trabajo realizado.
-- **Rama y pull request:** el módulo de ventas se desarrolló en la rama `feature/modulo-ventas` y se integró a `main` mediante un pull request: [COMPLETAR: enlace al pull request].
-- **Issues:** [COMPLETAR: enlace a un problema detectado y a una mejora pendiente].
-- **Versión final:** [COMPLETAR: enlace al release o etiqueta, por ejemplo v1.0].
+
+- **Rama y pull request:** la funcionalidad feature/modulo-ventas y se integró a main mediante un pull request. y se integró mediante un pull request.
+- **Issues:** por ejemplo #2: no se permite modificar los datos de una venta ya registrada.
+- **Versión final:** v1.0..
 
 ## Limitaciones conocidas
-
-- Los reportes muestran los datos cargados al iniciar el programa; para ver una venta reciente hay que reiniciarlo.
-- La carpeta `src/datos/` no se crea sola; si falta, el programa falla al guardar.
-- Los datos se guardan como archivos de Python y se leen con `exec()`, por lo que no deben editarse a mano ni provenir de fuentes no confiables.
-- Está pensado para un solo usuario a la vez.
+Los datos se guardan como archivos de Python y se leen con exec(), por lo que no deben editarse a mano ni provenir de fuentes no confiables.
+Está pensado para un solo usuario a la vez.
