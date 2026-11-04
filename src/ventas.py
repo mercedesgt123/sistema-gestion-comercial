@@ -271,6 +271,7 @@ def registroVentas():
             guardarVentas(ventas)
             guardarProductos(productos)
             productos = cargarProductos()
+            movimientos = cargarMovimientos()
             
             print("""
 ====================================================================================================================

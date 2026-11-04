@@ -2,7 +2,7 @@ import os
 import sys
 from estructuras import crearRegistroEntrada, crearMovimiento
 from datetime import datetime
-from archivos import cargarProductos, cargarMovimientos, cargarEntradas, guardarProductos, guardarMovimientos, guardarEntradas
+from archivos import cargarProductos, cargarMovimientos, cargarEntradas, cargarVentas, guardarProductos, guardarMovimientos, guardarEntradas
 
 movimientos = cargarMovimientos()
 entradas = cargarEntradas()
@@ -513,6 +513,7 @@ def stockProductos():
 def historialMovimientos():
     productos = cargarProductos()
     movimientos = cargarMovimientos()
+    ventas = cargarVentas()
     print("""
 =====================================================================================================
                                         HISTORIAL DE MOVIMIENTOS
