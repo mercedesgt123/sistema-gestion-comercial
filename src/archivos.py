@@ -1,6 +1,12 @@
 import os
 import pprint
 
+productos = []
+ventas = []
+movimientos = []
+datosInventario = []
+
+# ==================== RUTAS ====================
 RUTA_PRODUCTOS = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "datos",
@@ -25,12 +31,19 @@ RUTA_ENTRADAS = os.path.join(
     "datosInventario.py"
 )
 
-def guardarProductos(productos):
+
+
+# ==================== PRODUCTOS ====================
+def guardarProductos(productos_actualizados):
+    global productos 
+
+    productos = productos_actualizados  
+    
     with open(RUTA_PRODUCTOS, "w", encoding="utf-8") as f:
         f.write("productos = ")
         f.write(
             pprint.pformat(
-                productos,
+                productos_actualizados,
                 indent=4,
                 sort_dicts=False
             )
@@ -38,22 +51,29 @@ def guardarProductos(productos):
         f.write("\n")
 
 def cargarProductos():
+    global productos
     datos = {}
     try:
         with open(RUTA_PRODUCTOS, "r", encoding="utf-8") as f:
             exec(f.read(), datos)
-
-        return datos.get("productos", [])
-
+        productos = datos.get("productos", [])  
+        return productos
     except FileNotFoundError:
+        productos = []
         return []
 
-def guardarVentas(ventas):
+
+    
+# ==================== VENTAS ====================
+def guardarVentas(ventas_actualizadas):
+    global ventas  
+    ventas = ventas_actualizadas
+    
     with open(RUTA_VENTAS, "w", encoding="utf-8") as f:
         f.write("ventas = ")
         f.write(
             pprint.pformat(
-                ventas,
+                ventas_actualizadas,
                 indent=4,
                 sort_dicts=False
             )
@@ -65,43 +85,46 @@ def cargarVentas():
     try:
         with open(RUTA_VENTAS, "r", encoding="utf-8") as f:
             exec(f.read(), datos)
-
         return datos.get("ventas", [])
-
     except FileNotFoundError:
         return []
 
-def guardarMovimientos(movimientosInventario):
+
+# ==================== MOVIMIENTOS ====================
+def guardarMovimientos(movimientos_actualizados):
+    global movimientosInventario  
+    movimientosInventario = movimientos_actualizados
+    
     with open(RUTA_MOVIMIENTOS, "w", encoding="utf-8") as f:
         f.write("movimientosInventario = ")
         f.write(
             pprint.pformat(
-                movimientosInventario,
+                movimientos_actualizados,
                 indent=4,
                 sort_dicts=False
             )
         )
         f.write("\n")
 
-
 def cargarMovimientos():
     datos = {}
     try:
         with open(RUTA_MOVIMIENTOS, "r", encoding="utf-8") as f:
             exec(f.read(), datos)
-
         return datos.get("movimientosInventario", [])
-
     except FileNotFoundError:
         return []
 
-
-def guardarEntradas(datosInventario):
+# ==================== ENTRADAS/INVENTARIO ====================
+def guardarEntradas(entradas_actualizadas):
+    global datosInventario 
+    datosInventario = entradas_actualizadas
+    
     with open(RUTA_ENTRADAS, "w", encoding="utf-8") as f:
         f.write("datosInventario = ")
         f.write(
             pprint.pformat(
-                datosInventario,
+                entradas_actualizadas,
                 indent=4,
                 sort_dicts=False
             )
@@ -113,8 +136,6 @@ def cargarEntradas():
     try:
         with open(RUTA_ENTRADAS, "r", encoding="utf-8") as f:
             exec(f.read(), datos)
-
         return datos.get("datosInventario", [])
-
     except FileNotFoundError:
         return []

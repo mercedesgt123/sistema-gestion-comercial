@@ -1,1 +1,15 @@
-movimientosInventario = []
+movimientosInventario = [   {   'fecha': '01/11/2026',
+        'tipo': 'Entrada',
+        'descripcion': 'Ingreso de producto por documento No. 1',
+        'codigoProducto': 2,
+        'cantidad': 10},
+    {   'fecha': '01/11/2026',
+        'tipo': 'Ajuste',
+        'descripcion': 'Ajuste por descuadre',
+        'codigoProducto': 2,
+        'cantidad': 8},
+    {   'fecha': '01/11/2026',
+        'tipo': 'Salida',
+        'descripcion': 'Salida de Venta por pedido No. 4',
+        'codigoProducto': 2,
+        'cantidad': 1}]

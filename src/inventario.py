@@ -4,9 +4,8 @@ from estructuras import crearRegistroEntrada, crearMovimiento
 from datetime import datetime
 from archivos import cargarProductos, cargarMovimientos, cargarEntradas, guardarProductos, guardarMovimientos, guardarEntradas
 
-productos = cargarProductos()
-entradas = cargarEntradas()
 movimientos = cargarMovimientos()
+entradas = cargarEntradas()
 
 def controlInventario(): 
     while True:
@@ -18,15 +17,16 @@ def controlInventario():
 ====================================================================================================================
 """)
             opcion = int(input(""" 
-            Elija una opción:
-            1. Consultar existencias de productos
-            2. Registrar Entradas de Inventario
-            3. Actualizar Cantidades disponibles
-            4. Productos Sctock Mínimo
-            5. Historial de Movimientos de Inventario
-            6. Regresar a Menú Principal
-            7. Salir
-            Opción: """))
+Elija una opción:
+1. Consultar existencias de productos
+2. Registrar Entradas de Inventario
+3. Actualizar Cantidades disponibles
+4. Productos Stock Mínimo
+5. Historial de Movimientos de Inventario
+6. Regresar a Menú Principal
+7. Salir
+
+Escriba una Opción: """))
 
             os.system("cls" if os.name == "nt" else "clear")
             match opcion:
@@ -71,6 +71,7 @@ def controlInventario():
             input("Presione Enter para continuar...")
 
 def consultarExistencias():
+    productos = cargarProductos()
     print(""" 
 ====================================================================================================================
                                                     EXISTENCIAS DE PRODUCTOS    
@@ -84,15 +85,19 @@ def consultarExistencias():
             f"{'Existencia':>12}"  
         )
         print("-" * 115)
-    
+
+        product =False
         for val in productos:
             if val['cantidad'] > 0 and val['estado'] == "Activo":
+                product = True
                 print(
                     f"{val['codigo']:<10} "
                     f"{val['nombre']:<75} "
                     f"{'':<15} "
                     f"{val['cantidad']:^12} "
                 )
+        if not product:
+            print("No tiene productos con existencias, porfavor controle su inventario")
 
         print("-" * 115)
         input("\n\nPresione Enter para continuar...")
@@ -104,6 +109,8 @@ def consultarExistencias():
         return
 
 def registroEntradas():
+    global entradas, movimientos
+    productos = cargarProductos()
     print(""" 
 ====================================================================================================================
                                                 REGISTRO DE ENTRADAS   
@@ -262,14 +269,15 @@ OPERACIÓN CANCELADA: EL DOCUMENTO NO SE GUARDÓ
                     f"{item['precio']:>12.2f} "
                 )
 
-                #ACTUALIZACION Y GUARDA EL DOCUMENTO
+                # ACTUALIZACION Y GUARDA EL DOCUMENTO
             for item in detalle:
+
+                actualizado = False
                 for prod in productos:
-                    if prod['codigo'] == item['codigo']:
+                    if prod['codigo'] == item['codigo'] and not actualizado:
                         prod['cantidad'] += item['cantidad']
                         prod['precio'] = item['precio']
 
-                              
                         tipoMovimiento = "Entrada"
                         descripcion = f"Ingreso de producto por documento No. {correlativo}"
                         movimiento = crearMovimiento(
@@ -280,6 +288,7 @@ OPERACIÓN CANCELADA: EL DOCUMENTO NO SE GUARDÓ
                             item['cantidad']
                         )
                         movimientos.append(movimiento)
+                        actualizado = True
                         break
 
             guardarMovimientos(movimientos)
@@ -287,6 +296,7 @@ OPERACIÓN CANCELADA: EL DOCUMENTO NO SE GUARDÓ
             entradas.append(entrada)
             guardarEntradas(entradas)
             guardarProductos(productos)
+            productos = cargarProductos()
 
             print("""
 ====================================================================================================================
@@ -306,13 +316,18 @@ OPERACIÓN CANCELADA: EL DOCUMENTO NO SE GUARDÓ
         return
 
 def actualizar():
+    productos = cargarProductos()
+
     print(""" 
 ====================================================================================================================
                                                     ACTUALIZAR EXISTENCIAS   
 ====================================================================================================================""")
+
     if productos:
+
         print("Presione 0 si desea salir")
         opcion = input("Ingrese opción: ").strip().upper()
+
         if opcion == "0":
             print("""
 ====================================================================================================================
@@ -322,94 +337,103 @@ def actualizar():
             return
 
         detalle = []
+        movimientos = cargarMovimientos()
         fecha = datetime.now().strftime('%d/%m/%Y')
+
         print("""
 ====================================================================================================================
                                                     INGRESO DE DATOS 
 ====================================================================================================================""")
+
+        codigo = validarTexto("Ingrese código del producto: ")
+
+        productoEncontrado = False
+
+        for val in productos:
+            if val['codigo'] == codigo:
+                productoEncontrado = val
+                break
+
+        if not productoEncontrado:
+            print("\033[31mProducto no encontrado.\033[0m")
+            input("\nPresione Enter para continuar...")
+            return
+
+        if productoEncontrado['estado'] != 'Activo':
+            print("\033[33mEl producto se encuentra inactivo.\033[0m")
+            input("\nPresione Enter para continuar...")
+            return
+
+        print(f"\033[32mExistencia Actual: \033[0m{productoEncontrado['cantidad']}")
+
         while True:
-            codigo = validarTexto("Ingrese código del producto: ")
 
-            productoEncontrado = False
-            for val in productos:
-                if val['codigo'] == codigo:
-                    productoEncontrado = val
-                    break  
+            cantidad = validarTexto("Ingrese nueva existencia: ")
 
-            if not productoEncontrado:
-                print("\033[31mProducto no encontrado.\033[0m")
-                intento = validarOpcion("¿Desea intentar con otro producto? (Si/No): ")
-                if not intento:
-                    print("""
-====================================================================================================================
-                                                    OPERACIÓN CANCELADA
-====================================================================================================================""")
-                    input("\nPresione Enter para continuar...")
-                    return  
-                continue  
-
-            if productoEncontrado['estado'] != 'Activo':
-                print("\033[33mEl producto se encuentra inactivo.\033[0m")
-                intento = validarOpcion("¿Desea intentar con otro producto? (Si/No): ")
-                if not intento:
-                    print("""
-====================================================================================================================
-                                                    OPERACIÓN CANCELADA
-====================================================================================================================""")
-                    input("\nPresione Enter para continuar...")
-                    return
+            if cantidad < 0:
+                print("Error: La cantidad no puede ser negativa.")
                 continue
-            
-            print(f"\033[32mExistencia Actual: \033[0m", int(productoEncontrado['cantidad']))
-            while True:  
-                cantidad = validarTexto("Ingrese cantidad: ")
-                if cantidad <= 0:
-                    print("Error: La cantidad debe ser mayor que cero.")
-                    continue          
-                break
-            
 
-            detalle.append({
-                'codigo': productoEncontrado['codigo'],
-                'nombre': productoEncontrado['nombre'],
-                'cantidad': cantidad  
-            })
+            if cantidad == productoEncontrado['cantidad']:
+                print("La nueva existencia es igual a la existencia actual.")
+                continue
 
-            agregarProducto = validarOpcion("¿Desea agregar otro producto? (Si/No): ")
-            if not agregarProducto:
-                break
+            break
 
-        guardar = validarOpcion("¿Desea guardar el documento? (Si/No): ")
-        if guardar:    
+        detalle.append({
+            'codigo': productoEncontrado['codigo'],
+            'nombre': productoEncontrado['nombre'],
+            'existenciaActual': productoEncontrado['cantidad'],
+            'cantidad': cantidad
+        })
+
+        guardar = validarOpcion("¿Desea guardar las actualizaciones? (Si/No): ")
+
+        if guardar:
+
             print("""
 ====================================================================================================================
                                                     DATOS ACTUALIZADOS
 ====================================================================================================================""")
+
             print(
                 f"{'Código':<10} "
-                f"{'Producto':<75} "
-                f"{'':<15} "
-                f"{'Existencia':>12}"  
+                f"{'Producto':<60} "
+                f"{'Existencia Actual':>20} "
+                f"{'Nueva Existencia':>20}"
             )
-            print("-" * 115)
-                
+
+            print("-" * 120)
+
             for item in detalle:
+
                 print(
                     f"{item['codigo']:<10} "
-                    f"{item['nombre']:<75} "
-                    f"{'':<15} "
-                    f"{item['cantidad']:^12} "
+                    f"{item['nombre']:<60} "
+                    f"{item['existenciaActual']:>20} "
+                    f"{item['cantidad']:>20}"
                 )
 
-            print("-" * 115)
-                #ACTUALIZACION 
+            print("-" * 120)
+
             for item in detalle:
+
                 for prod in productos:
+
                     if prod['codigo'] == item['codigo']:
+
+                        existenciaAnterior = prod['cantidad']
+
                         prod['cantidad'] = item['cantidad']
-                              
+
                         tipoMovimiento = "Ajuste"
-                        descripcion = f"Ajuste por descuadre"
+
+                        descripcion = (
+                            f"Ajuste de existencias. "
+                            f"Anterior: {existenciaAnterior}, "
+                            f"Nueva: {item['cantidad']}"
+                        )
+
                         movimiento = crearMovimiento(
                             fecha,
                             tipoMovimiento,
@@ -417,7 +441,9 @@ def actualizar():
                             item['codigo'],
                             item['cantidad']
                         )
+
                         movimientos.append(movimiento)
+
                         break
 
             guardarMovimientos(movimientos)
@@ -425,23 +451,30 @@ def actualizar():
 
             print("""
 ====================================================================================================================
-                                            ACTUALIZADO CON ÉXITO
+                                                ACTUALIZADO CON ÉXITO
 ====================================================================================================================""")
+
             input("\nPresione Enter para continuar...")
+
         else:
+
             print("""
 ====================================================================================================================
-                                                    OPERACION CANCELADA 
+                                                    OPERACIÓN CANCELADA
 ====================================================================================================================""")
+
             input("\nPresione Enter para continuar...")
             return
-    else:        
+
+    else:
+
         print("No hay Productos Registrados.")
         print("====================================================================================================================")
         input("Presione Enter para continuar...")
         return
-
+    
 def stockProductos():
+    productos = cargarProductos()
     print(""" 
 ====================================================================================================================
                                                     STOCK MINIMO   
@@ -454,6 +487,7 @@ def stockProductos():
             f"{'Stock Minímo':>12}"  
         )
         print("-" * 115)
+        productoStock = False
         for val in productos:
             if val['cantidad'] <= val['stock'] and val['estado'] == "Activo":
                 print(
@@ -462,6 +496,9 @@ def stockProductos():
                     f"{val['cantidad']:^15} "
                     f"{val['stock']:^12}"
                 )
+                productoStock = True
+        if not productoStock:
+            print("No hay productos con stock minìmo")
 
         print("-" * 115)
         input("\n\nPresione Enter para continuar...")
@@ -474,6 +511,8 @@ def stockProductos():
 
 
 def historialMovimientos():
+    productos = cargarProductos()
+    movimientos = cargarMovimientos()
     print("""
 =====================================================================================================
                                         HISTORIAL DE MOVIMIENTOS

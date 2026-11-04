@@ -4,9 +4,6 @@ from estructuras import crearVenta, crearMovimiento
 from datetime import datetime
 from archivos import cargarProductos, cargarVentas, cargarMovimientos, guardarProductos, guardarVentas, guardarMovimientos
 
-productos = cargarProductos()
-ventas = cargarVentas()
-movimientos = cargarMovimientos()
 
 def gestionVentas(): 
     while True:
@@ -21,7 +18,8 @@ Elija una opción:
 1. Registrar Venta
 2. Regresar a Menú Principal
 3. Salir
-Opción: """))
+
+Escriba una Opción: """))
 
             os.system("cls" if os.name == "nt" else "clear")
             match opcion:
@@ -57,7 +55,10 @@ Opción: """))
             print("Error: Debe ingresar únicamente números.")
             input("Presione Enter para continuar...")
 
-def registroVentas():
+def registroVentas():  
+    productos = cargarProductos()
+    ventas = cargarVentas()
+    movimientos = cargarMovimientos()
     print("""
 ====================================================================================================================
                                                     CREACION DE VENTAS
@@ -97,7 +98,7 @@ def registroVentas():
 
         while True:
             codigo = validarTexto("Ingrese código del producto: ")
-
+            
             productoEncontrado = False
             for val in productos:
                 if val['codigo'] == codigo:
@@ -143,7 +144,7 @@ def registroVentas():
                     continue  
 
                 if productoEncontrado['cantidad'] <= 0:
-                    print(f"\033[31mNo hay existencias. Disponible: {productoEncontrado['cantidad']}\033[0m")
+                    print("\033[31mNo hay existencias.\033[0m")
                     intento = validarOpcion("¿Desea ingresar otro producto? (Si/No): ")
                     if not intento:
                         if len(detalle) == 0:
@@ -162,7 +163,15 @@ def registroVentas():
                 elif cantidad > productoEncontrado['cantidad']:
                     print("\033[31mInventario insuficiente\033[0m")
                     print(f"\033[31mCantidad Disponible: {productoEncontrado['cantidad']}\033[0m")
-                    continue  
+
+                    intento = validarOpcion("¿Desea intentar con otro producto? (Si/No): ")
+
+                    if not intento:
+                        terminarVenta = True
+
+                    productoDuplicado = True
+                    break
+  
                 else:
                     cantidadValida = True
                     break  
@@ -175,10 +184,21 @@ def registroVentas():
 
             productoDuplicado = False
             for value in detalle:
-                if codigo == value['codigo']:
-                    value['cantidad'] += cantidad
-                    value['subtotal'] += cantidad * productoEncontrado['precio']
+                if codigo == value['codigo']:    
+                    if cantidad > productoEncontrado['cantidad']:
+                        print("\033[31mInventario insuficiente\033[0m")
+                        print(f"\033[31mCantidad disponible: {productoEncontrado['cantidad']}\033[0m")
 
+                        productoDuplicado = True
+                        break
+
+                    value['cantidad'] += cantidad
+                    value['subtotal'] = value['cantidad'] * productoEncontrado['precio']
+
+                    productoEncontrado['cantidad'] -= cantidad
+
+                    subtotalGeneral = 0
+                    
                     for total in detalle:
                         subtotalGeneral += total['subtotal']
                         
@@ -195,6 +215,7 @@ def registroVentas():
                     "cantidad": cantidad,
                     "subtotal": subtotalProducto
                 })
+                productoEncontrado['cantidad'] -= cantidad
 
 
             agregarProducto = validarOpcion("¿Desea agregar otro producto? (Si/No): ")
@@ -215,10 +236,11 @@ def registroVentas():
                 f"{'Cantiad':<15} "
                 f"{'Total':>12}"  
             )
+            print("-" * 115)
                 
             for item in detalle:
                 print(f"{item['codigo']:<10} {item['nombre']:<75}{item['cantidad']:^15} {item['subtotal']:>12.2f}")
-                print("-" * 115)
+            print("-" * 115)
             print(f"Subtotal : Q.{subtotalGeneral:.2f}")
             print(f"IVA 12%  : Q.{iva:.2f}")
             print(f"Total    : Q.{totalVenta:.2f}")
@@ -228,7 +250,7 @@ def registroVentas():
             for item in detalle:
                 for prod in productos:
                     if prod['codigo'] == item['codigo']:
-                        prod['cantidad'] -= item['cantidad']
+                        prod['cantidad'] = prod['cantidad']
 
                               
                         tipoMovimiento = "Salida"
@@ -248,6 +270,7 @@ def registroVentas():
             ventas.append(registroVenta)
             guardarVentas(ventas)
             guardarProductos(productos)
+            productos = cargarProductos()
             
             print("""
 ====================================================================================================================
